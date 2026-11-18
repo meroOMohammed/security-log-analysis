@@ -41,8 +41,39 @@ for ip, g in failed.sort_values("timestamp").groupby("source_ip"):
         bf.append((ip, int(s.max()), s.idxmax()))
 for r in bf: print(r)
 
-print("\n=== 5) رش كلمات السر: عنوان واحد على 5+ مستخدمين ===")
-print(top_fail[top_fail.users >= 5][["failed","users"]].to_string())
+print("\n=== 5) رش كلمات السر: عدد مستخدمين مختلفين من نفس العنوان داخل نافذة زمنية ===")
+# كل قاعدة: (اسم، طول النافذة، أقل عدد مستخدمين). عدّلي الأرقام حسب البيئة.
+SPRAY_RULES = [
+    ("سريع", pd.Timedelta(minutes=30), 10),
+    ("بطيء", pd.Timedelta(hours=24), 5),
+]
+
+def max_distinct_users(g, window):
+    """أكبر عدد مستخدمين مختلفين فشل عليهم العنوان داخل أي نافذة بالطول المحدد."""
+    times = g.timestamp.tolist()
+    users = g.username.tolist()
+    counts, best, start = {}, (0, None), 0
+    for end in range(len(times)):
+        counts[users[end]] = counts.get(users[end], 0) + 1
+        while times[end] - times[start] > window:
+            counts[users[start]] -= 1
+            if counts[users[start]] == 0:
+                del counts[users[start]]
+            start += 1
+        if len(counts) > best[0]:
+            best = (len(counts), times[start])
+    return best
+
+spray = []
+for ip, g in failed.sort_values("timestamp").groupby("source_ip"):
+    for name, window, min_users in SPRAY_RULES:
+        n, since = max_distinct_users(g, window)
+        if n >= min_users:
+            spray.append((ip, name, n, since))
+if spray:
+    print(pd.DataFrame(spray, columns=["source_ip", "rule", "max_users", "window_start"]).to_string(index=False))
+else:
+    print("ما اتلقاش رش كلمات سر.")
 
 print("\n=== 6) نجاح بعد سلسلة فشل (احتمال اختراق) ===")
 for ip,_,_ in bf:
