@@ -60,7 +60,3 @@ The full report covers each case in detail, with recommendations split into imme
 ## Skills demonstrated
 
 Log analysis, detection logic (brute force, spraying, anomalous access), incident triage and severity rating, and report writing with actionable recommendations.
-
-## Context
-
-Built as part of the SOC course in the DEPI initiative.
