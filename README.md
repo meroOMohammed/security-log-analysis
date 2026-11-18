@@ -1,52 +1,66 @@
-# Security Log Analysis & Incident Investigation Report
+# Security Log Analysis & Incident Investigation
 
-## Project Overview
-This project demonstrates a security log analysis and incident investigation workflow using Python and Pandas on a synthetic security log dataset.
+A SOC-style investigation of one week of authentication and access logs: a Python script that applies detection rules with Pandas, and a written incident report with findings and recommendations.
 
-The objective is to identify suspicious authentication activities, investigate potentially malicious patterns, build an event timeline, and provide actionable security recommendations.
+> **Note:** the log file is a **simulated dataset** prepared for practice. All IP addresses, hostnames and usernames are fictional. This is a learning project, not a real incident.
 
-## Dataset
-- Source: Synthetic test dataset
-- Records analyzed: 4,858
-- Time period: November 1–7, 2026
-- Hosts: 5
-- Users: 19
+## What is in this repo
 
-**Note:** All data is fictional and used for educational and portfolio demonstration purposes. This report does not describe a real security incident.
+| Path | Description |
+|---|---|
+| `analyze_logs.py` | Detection script (Python + Pandas) |
+| `sample_security_logs.csv` | Sample logs: 4,858 events, 2026-11-01 to 2026-11-07, 5 hosts, 19 accounts |
+| `report/security_log_analysis_report.pdf` | Full investigation report (Arabic) |
+| `requirements.txt` | Python dependencies |
 
-## Analysis Highlights
-- Analyzed successful and failed login attempts.
-- Investigated repeated authentication failures followed by a successful login.
-- Examined suspicious SSH username-guessing activity.
-- Identified potential password-spraying patterns.
-- Reviewed unusual successful login activity and subsequent account changes.
-- Developed an event timeline and security recommendations.
+## How to run
 
-## Tools & Technologies
-- Python
-- Pandas
-- Security Log Analysis
-- Incident Investigation
-- SOC Analysis
+```bash
+pip install -r requirements.txt
+python analyze_logs.py                      # picks up the CSV next to the script
+python analyze_logs.py path/to/your_logs.csv
+```
 
-## Key Findings
-The analysis highlighted several suspicious authentication patterns that may require further investigation in a real environment, including repeated failed logins, possible password guessing, and unusual login activity.
+Expected CSV columns: `timestamp, source_ip, username, event_type, status, host, user_agent, dest_port, failure_reason`
 
-These findings are indicators for investigation, not proof of compromise.
+The script prints its output in Arabic.
 
-## Recommendations
-- Enforce Multi-Factor Authentication (MFA).
-- Apply account lockout and authentication policies.
-- Restrict and monitor remote access services such as SSH.
-- Review privileged account activity.
-- Monitor unusual login patterns and investigate relevant indicators.
+## Detections
 
-## Project Deliverables
-- Security Log Analysis Report (PDF)
-- Selected report screenshots
-- Synthetic dataset (if included)
+| # | Rule | Default threshold |
+|---|---|---|
+| 1 | Event and login overview (success vs. failed) | n/a |
+| 2 | Top source IPs by failed logins | n/a |
+| 3 | Brute force | 10+ failed logins from one IP within 5 minutes |
+| 4 | Password spraying | one IP failing against 5+ distinct usernames |
+| 5 | Successful login after a failure streak | possible compromise |
+| 6 | Successful login from outside the internal range (not `10.x`) | n/a |
+| 7 | Successful logins between 00:00 and 05:00 | n/a |
+| 8 | Account lockouts | n/a |
 
-## Disclaimer
-This is an educational portfolio project based on fictional data. IP addresses, usernames, and host information are illustrative. No external threat-intelligence or IP reputation validation is claimed.
+Thresholds can be tuned to the environment.
 
-**Prepared by:** Mirvet Mohamed
+## Findings summary
+
+| # | Activity | Source IP | Severity |
+|---|---|---|---|
+| 1 | Brute force followed by a successful login to `admin` (possible compromise) | 185.220.101.45 | Critical |
+| 2 | SSH username guessing | 45.155.205.233 | High |
+| 3 | Password spraying across all accounts | 103.77.192.18 | High |
+| 4 | Successful external login at 03:22 followed by a password change | 91.240.118.77 | High |
+| 5 | Two account lockouts from internal addresses (likely user error) | internal | Low |
+
+The full report covers each case in detail, with recommendations split into immediate (24 hours), short-term (2 weeks) and long-term actions.
+
+## Limitations
+
+- IP reputation and geolocation were not checked, and no external sources were used.
+- Results are indicators that need verification, not proof of attacker intent or impact.
+
+## Skills demonstrated
+
+Log analysis, detection logic (brute force, spraying, anomalous access), incident triage and severity rating, and report writing with actionable recommendations.
+
+## Context
+
+Built as part of the SOC course in the DEPI initiative.
