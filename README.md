@@ -32,7 +32,7 @@ The script prints its output in Arabic.
 | 1 | Event and login overview (success vs. failed) | n/a |
 | 2 | Top source IPs by failed logins | n/a |
 | 3 | Brute force | 10+ failed logins from one IP within 5 minutes |
-| 4 | Password spraying | one IP failing against 5+ distinct usernames |
+| 4 | Password spraying (sliding window) | fast: 10+ distinct usernames from one IP within 30 min; slow: 5+ within 24 h |
 | 5 | Successful login after a failure streak | possible compromise |
 | 6 | Successful login from outside the internal range (not `10.x`) | n/a |
 | 7 | Successful logins between 00:00 and 05:00 | n/a |
